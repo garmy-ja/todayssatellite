@@ -35,7 +35,7 @@ end
 
 logging('Start: satellite_bot_tweet.rb started.')
 
-fs = File::Stat.new(File.expand_path('../satellitelist.xlsx',__FILE__))
+fs = File::Stat.new(File.expand_path('../tweetlist.xlsx',__FILE__))
 tsvtimestamp = fs.mtime - 1
 tweetlist = Array.new()
 
@@ -45,7 +45,7 @@ begin
 loop do
 
   # load tweet list
-    fs = File::Stat.new(File.expand_path('../satellitelist.xlsx',__FILE__))
+    fs = File::Stat.new(File.expand_path('../tweetlist.xlsx',__FILE__))
     if tsvtimestamp < fs.mtime  then
       tsvtimestamp = fs.mtime
       tweetlist.clear
