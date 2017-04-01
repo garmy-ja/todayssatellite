@@ -7,14 +7,14 @@ Twitter bot program for https://twitter.com/todayssatellite
 
 tweetlist.tsvにツイートする内容・日付・時刻を設定し
 
-$ ruby bot_controll.rb start
+$ ruby bot_control.rb start
 
 でdaemon化して起動します。
 そうすると、tweetlist.tsvに記載された日付・時刻に当該のツイートが送信されます。
 
 daemonの終了は
 
-$ ruby bot_controll.rb stop
+$ ruby bot_control.rb stop
 
 です。
 なお、ツイート時点での文字数の確認は行っていません。
