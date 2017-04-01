@@ -16,14 +16,17 @@ tweetlist.tsvにツイートする内容・日付・時刻を設定し
 $ ruby bot_control.rb start
 
 でdaemon化して起動します。
-そうすると、tweetlist.tsvに記載された日付・時刻に当該のツイートが送信されます。
+そうすると、tweetlist.xlsxに記載された日付・時刻に当該のツイートが送信されます。
+daemon起動中でも定期的にtweetlist.xlsxの更新時刻は確認しているため、もしリストを編集してもdaemonの再起動を行う必要はありません。
 
 daemonの終了は
 
 $ ruby bot_control.rb stop
 
 です。
+
 なお、ツイート時点での文字数の確認は行っていません。
+tweetlist.xlsxのC列に文字数確認を入れていますのでそちらをご利用下さい。
 
 ## about "Todays' Satellite" / 今日の人工衛星 とは
 
