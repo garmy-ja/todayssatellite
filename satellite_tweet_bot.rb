@@ -5,6 +5,7 @@
 require 'rubygems'
 require 'twitter'
 require 'time'
+require 'roo'
 
 # define logging script activity function
 def logging( log_str )
@@ -34,7 +35,7 @@ end
 
 logging('Start: satellite_bot_tweet.rb started.')
 
-fs = File::Stat.new(File.expand_path('../tweetlist.tsv',__FILE__))
+fs = File::Stat.new(File.expand_path('../satellitelist.xlsx',__FILE__))
 tsvtimestamp = fs.mtime - 1
 tweetlist = Array.new()
 
@@ -44,16 +45,16 @@ begin
 loop do
 
   # load tweet list
-    fs = File::Stat.new(File.expand_path('../tweetlist.tsv',__FILE__))
+    fs = File::Stat.new(File.expand_path('../satellitelist.xlsx',__FILE__))
     if tsvtimestamp < fs.mtime  then
       tsvtimestamp = fs.mtime
       tweetlist.clear
       tweetlist = Array.new()
       errorcount = []
-      open(File.expand_path('../tweetlist.tsv',__FILE__),'r') do |file|
-        file.each_line do |line|
-          tweetlist += [line.chomp.split(/\t/)]    
-        end
+      xlsx = Roo::Excelx.new(File.expand_path('../tweetlist.xlsx',__FILE__))
+      xlsx.default_sheet = 'todayssatellite'
+      for xlsrow in 1..xlsx.last_row do
+        tweetlist += [[ xlsx.cell(xlsrow,1),xlsx.cell(xlsrow,2) ]]
       end
       logging(' : Success: tweet list reloaded. list count is '+tweetlist.count.to_s)
     end
