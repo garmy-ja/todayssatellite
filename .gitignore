@@ -1,3 +1,7 @@
 token.conf
 *~
 _log_tweets
+followers_rr.conf
+followers_rr.accounts.conf
+followers_log
+_log_followers
