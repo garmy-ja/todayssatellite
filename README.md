@@ -3,6 +3,8 @@
 Twitter bot program for https://twitter.com/todayssatellite
 今日の人工衛星アカウントに定時にTweetをするためのbot
 
+アカウントのフォロー状況を定期的に取得するスクリプトfollowers_rr.rbも同梱、そちらの利用方法は当該ファイルを確認のこと。
+
 ## Enviroment / 動作環境
 
 ruby 2.4.0にて動作確認。ツイートリストのExcel化以前であれば ruby 1.6.6のころから動いていたはずです。
