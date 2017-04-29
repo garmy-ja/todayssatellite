@@ -1,16 +1,19 @@
 #!/usr/bin/env ruby -Ku
 
-
+# for mastodon fork
 # load library
 require 'rubygems'
-require 'twitter'
 require 'time'
 require 'roo'
+require 'mastodon'
+require 'highline/import'
+require 'oauth2'
+require 'dotenv'
 
 # define logging script activity function
 def logging( log_str )
   begin
-    file = open(File.expand_path('../_log_tweets',__FILE__),'a')
+    file = open(File.expand_path('../_log_toots',__FILE__),'a')
     file.print Time.now.to_s, "\t", log_str, "\n"
   STDOUT.sync = true
   print Time.now.to_s, "\t", log_str, "\n"
@@ -21,17 +24,55 @@ def logging( log_str )
 end
 
 ## Initialize
-# Twitter gem configuration
+# Mastodon gem configuration
 
-logging("token files : token.conf")
-client = Twitter::REST::Client.new do |config|
-  conf = open(File.expand_path('../token.conf',__FILE__),'r')
-  config.consumer_key        = conf.gets.chomp
-  config.consumer_secret     = conf.gets.chomp
-  config.access_token        = conf.gets.chomp
-  config.access_token_secret = conf.gets.chomp
-  conf.close
+## 以下 http://qiita.com/fjustin/items/afe21c00dc50c23cd109 のコードほとんどそのまま頂いてます
+DEFAULT_APP_NAME = "todays-satellite-bot"
+DEFAULT_MASTODON_URL = 'https://mastodon.cosmicanimal.jp'
+FULL_ACCESS_SCOPES = "read write follow"
+
+Dotenv.load(File.expand_path('../.env',__FILE__))
+
+##インスタンスとURLの確認
+logging("checking instance and URL")
+if !ENV["MASTODON_URL"]
+  ENV["MASTODON_URL"] = ask("Instance URL: "){|q| q.default = DEFAULT_MASTODON_URL}
+  File.open(".env","a+") do |f|
+    f.write "MASTODON_URL = '#{ENV["MASTODON_URL"]}'\n"
+  end
 end
+
+scopes = ENV["MASTODON_SCOPES"] || FULL_ACCESS_SCOPES
+app_name = ENV["MASTODON_APP_NAME"] || DEFAULT_APP_NAME
+
+##クライアントIDの確認
+logging("checking client id")
+if !ENV["MASTODON_CLIENT_ID"] || !ENV["MASTODON_CLIENT_SECRET"]
+  client = Mastodon::REST::Client.new(base_url: ENV["MASTODON_URL"])
+  app = client.create_app(app_name, "urn:ietf:wg:oauth:2.0:oob", scopes)
+  ENV["MASTODON_CLIENT_ID"] = app.client_id
+  ENV["MASTODON_CLIENT_SECRET"] = app.client_secret
+  File.open(".env","a+") do |f|
+    f.write "MASTODON_CLIENT_ID = '#{ENV["MASTODON_CLIENT_ID"]}'\n"
+    f.write "MASTODON_CLIENT_SECRET = '#{ENV["MASTODON_CLIENT_SECRET"]}'\n"
+  end
+end
+
+##アクセストークンの確認（アカウントとパスワード）
+logging("loading/setting account id/pw")
+if !ENV["MASTODON_ACCESS_TOKEN"]
+  client = OAuth2::Client.new(ENV["MASTODON_CLIENT_ID"],ENV["MASTODON_CLIENT_SECRET"],site: ENV["MASTODON_URL"])
+  login_id = ask("Your Account: ")
+  password = ask("Your Password: ")
+  token = client.password.get_token(login_id,password, scope: scopes)
+  ENV["MASTODON_ACCESS_TOKEN"] = token.token
+  File.open(".env","a+") do |f|
+    f.write "MASTODON_ACCESS_TOKEN = '#{ENV["MASTODON_ACCESS_TOKEN"]}'\n"
+  end
+end
+
+client = Mastodon::REST::Client.new(base_url: ENV["MASTODON_URL"],
+                                    bearer_token: ENV["MASTODON_ACCESS_TOKEN"])
 
 logging('Start: satellite_bot_tweet.rb started.')
 
@@ -67,7 +108,7 @@ loop do
         begin
           
           begin
-            client.update(tweet[1])
+            response = client.create_status(tweet[1])
             ## catch exception ... rate_limit_over
           rescue Twitter::Error::TooManyRequests => error
             ## logging
@@ -77,9 +118,9 @@ loop do
             ## retry
             retry
           end
-        logging('Execute: Twitter.update')
+        logging('Execute: Mastodon.update')
         rescue
-          logging('Error: Twitter.update')
+          logging('Error: Mastodon.update')
         end
       end
       sleep(1)
