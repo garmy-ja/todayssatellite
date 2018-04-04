@@ -2,7 +2,7 @@
 
 Twitter bot program for https://twitter.com/todayssatellite
 今日の人工衛星アカウントに定時にTweetをするためのbot
-ついでにmastodonにもポストするように設定しました
+~ついでにmastodonにもポストするように設定しました~ アップデート追従が手間になったので更新してません…
 
 アカウントのフォロー状況を定期的に取得するスクリプトfollowers_rr.rbも同梱、そちらの利用方法は当該ファイルを確認のこと。
 
@@ -10,7 +10,10 @@ Twitter bot program for https://twitter.com/todayssatellite
 
 ruby 2.4.0にて動作確認。ツイートリストのExcel化以前であれば ruby 1.6.6のころから動いていたはずです。
 
-必要なgemsは twitter, daemons の2つ。
+必要なgemsは twitter, daemons, roo の3つ。
+
+mastodon対応はgemsを使っていたけれど、なんか動かなくなったのでメンテしておらず、
+入れても入れなくてもよいです。
 
 ## usage / 使用法
 
@@ -32,6 +35,10 @@ $ ruby bot_control.rb stop
 tweetlist.xlsxのC列に文字数確認を入れていますのでそちらをご利用下さい。
 
 ## about "Todays' Satellite" / 今日の人工衛星 とは
+
+最新情報は
+http://todayssatellite.jpn.org/about
+に記載。といっても中身はたぶん一緒。
 
 A brief explanation of the spacecraft (artificial satellite, rocket, spacecraft) launched in the past.
 過去に打ち上げられた宇宙機（人工衛星、ロケット、探査機）の簡単な解説。
