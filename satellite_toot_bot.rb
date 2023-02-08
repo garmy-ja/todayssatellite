@@ -28,7 +28,7 @@ end
 
 ## à»â∫ http://qiita.com/fjustin/items/afe21c00dc50c23cd109 ÇÃÉRÅ[ÉhÇŸÇ∆ÇÒÇ«ÇªÇÃÇ‹Ç‹í∏Ç¢ÇƒÇ‹Ç∑
 DEFAULT_APP_NAME = "todays-satellite-bot"
-DEFAULT_MASTODON_URL = 'https://mastodon.cosmicanimal.jp'
+DEFAULT_MASTODON_URL = 'https://activitypub.garmy.jp'
 FULL_ACCESS_SCOPES = "read write follow"
 
 Dotenv.load(File.expand_path('../.env',__FILE__))
