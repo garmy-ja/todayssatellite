@@ -9,6 +9,8 @@ require 'mastodon'
 require 'highline/import'
 require 'oauth2'
 require 'dotenv'
+require 'net/http'
+require 'json'
 
 # define logging script activity function
 def logging( log_str )
@@ -106,19 +108,10 @@ loop do
       tweet = tweetlist.assoc(Time.now.strftime('%m/%d %H:%M:%S'))
       if tweet then
         begin
-          
-          begin
-            response = client.create_status(tweet[1])
-            ## catch exception ... rate_limit_over
-          rescue Twitter::Error::TooManyRequests => error
-            ## logging
-            logging("Exception catch ( ", error,  " ) ... waiting until ", error.rate_limit.reset_at.to_s, "\n")
-            ## wait rate_limit_reset
-            sleep error.rate_limit.reset_in
-            ## retry
-            retry
-          end
-        logging('Execute: Mastodon.update')
+          response = Net::HTTP.post URI(ENV["MASTODON_URL"]+"/api/v1/statuses"),
+            "status="+tweet[1],
+            "Authorization" => "Bearer "+ENV["MASTODON_ACCESS_TOKEN"]
+          logging('Execute: Mastodon.update')
         rescue
           logging('Error: Mastodon.update')
         end
