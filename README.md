@@ -1,8 +1,8 @@
 # todayssatellite
 
-Twitter bot program for https://twitter.com/todayssatellite
+Twitter bot program for https://twitter.com/todayssatellite & https://activitypub.garmy.jp/@todayssatellite
 今日の人工衛星アカウントに定時にTweetをするためのbot
-~ついでにmastodonにもポストするように設定しました~ アップデート追従が手間になったので更新してません…
+Mastodonへの投稿も復活していますがAPIを直接叩いています。
 
 アカウントのフォロー状況を定期的に取得するスクリプトfollowers_rr.rbも同梱、そちらの利用方法は当該ファイルを確認のこと。
 
@@ -12,8 +12,8 @@ ruby 2.4.0にて動作確認。ツイートリストのExcel化以前であれ�
 
 必要なgemsは twitter, daemons, roo の3つ。
 
-mastodon対応はgemsを使っていたけれど、なんか動かなくなったのでメンテしておらず、
-入れても入れなくてもよいです。
+mastodon対応はtoken等生成のためにgemsを使っていますが、このコード自体でtokenを生成したわけではなく、
+tokenを生成する部分は正しく動作しない可能性があります。
 
 ## usage / 使用法
 
