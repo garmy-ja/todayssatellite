@@ -3,12 +3,19 @@
 
 # load library
 require 'rubygems'
-require 'twitter'
+#require 'twitter'
 require 'time'
 require 'roo'
 require "net/http"
 require "uri"
 require 'open-uri'
+
+# for API v2
+require 'oauth'
+require 'json'
+require 'typhoeus'
+require 'oauth/request_proxy/typhoeus_request'
+require 'dotenv/load'
 
 # define logging script activity function
 def logging( log_str )
@@ -34,21 +41,57 @@ def slackpost( raw_url, payload )
   response = https.request(request)
 end
 
+# Tweet post
+create_tweet_url = "https://api.twitter.com/2/tweets"
+
+def create_tweet(url, oauth_params, text)
+    json_payload = {"text": text}
+	options = {
+	    :method => :post,
+	    headers: {
+	     	"User-Agent": "v2CreateTweetRuby",
+        "content-type": "application/json"
+	    },
+	    body: JSON.dump(json_payload)
+	}
+	request = Typhoeus::Request.new(url, options)
+	oauth_helper = OAuth::Client::Helper.new(request, oauth_params.merge(:request_uri => url))
+	request.options[:headers].merge!({"Authorization" => oauth_helper.header}) # Signs the request
+	response = request.run
+
+	return response
+end
+
 ## Initialize
-# Twitter gem configuration
 
 logging('Start: satellite_bot_tweet.rb started.')
-logging("Opening token files : token.conf")
-conf = open(File.expand_path('../token.conf',__FILE__),'r')
-client = Twitter::REST::Client.new do |config|
-  config.consumer_key        = conf.gets.chomp
-  config.consumer_secret     = conf.gets.chomp
-  config.access_token        = conf.gets.chomp
-  config.access_token_secret = conf.gets.chomp
-end
-slackurl = conf.gets.chomp
-conf.close
 
+# Twitter configuration
+logging("Opening token files : .env")
+conf = open(File.expand_path('../token.conf',__FILE__),'r')
+consumer_key = ENV["CONSUMER_KEY"]
+consumer_secret = ENV["CONSUMER_SECRET"]
+access_token = ENV["ACCESS_TOKEN"]
+access_token_secret = ENV["ACCESS_TOKEN_SECRET"]
+
+# OAuth Consumerオブジェクトを作成
+consumer = OAuth::Consumer.new(consumer_key, consumer_secret,
+	:site => 'https://api.twitter.com',
+	:debug_output => false)
+
+# OAuth Access Tokenオブジェクトを作成
+access_token = OAuth::AccessToken.new(consumer, access_token, access_token_secret)
+
+# OAuthパラメータをまとめたハッシュを作成
+oauth_params = {
+:consumer => consumer,
+:token => access_token,
+}
+
+# Slack configuration
+slackurl = ENV["SLACK_WEBHOOK"]
+
+# load tweetlist
 fs = File::Stat.new(File.expand_path('../tweetlist.xlsx',__FILE__))
 tsvtimestamp = fs.mtime - 1
 tweetlist = Array.new()
@@ -83,19 +126,8 @@ begin
       tweet = tweetlist.assoc(tweettime_now)
       if tweet then
         begin
-
-          begin
-            client.update(tweet[1])
-            ## catch exception ... rate_limit_over
-          rescue Twitter::Error::TooManyRequests => error
-            ## logging
-            logging("Exception catch ( ", error,  " ) ... waiting until ", error.rate_limit.reset_at.to_s, "\n")
-            ## wait rate_limit_reset
-            sleep error.rate_limit.reset_in
-            ## retry
-            retry
-          end
-        logging('Execute: Twitter.update')
+          create_tweet(create_tweet_url, oauth_params, tweet[1])
+          logging('Execute: Twitter.update')
         rescue
           logging('Error: Twitter.update')
         end
