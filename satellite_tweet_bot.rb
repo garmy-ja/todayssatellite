@@ -83,6 +83,7 @@ logging('Start: satellite_bot_tweet.rb started.')
 
 # Twitter configuration
 logging("Opening token files : .env")
+Dotenv.load (File.expand_path('../.env',__FILE__))
 consumer_key = ENV["CONSUMER_KEY"]
 consumer_secret = ENV["CONSUMER_SECRET"]
 access_token = ENV["ACCESS_TOKEN"]
@@ -120,7 +121,7 @@ begin
     loopcount = 0
     begin
       # make time vars
-      tweettime_now = (Time.now + 0).strftime('%m/%d %H:%M:%S')
+      tweettime_now = (Time.now - 0).strftime('%m/%d %H:%M:%S')
       tweettime_nex = (Time.now + (60*60*24)).strftime('%m/%d %H:%M:%S')
       # tweet
       tweet = tweetlist.assoc(tweettime_now)
