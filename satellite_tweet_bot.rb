@@ -126,7 +126,7 @@ begin
       tweet = tweetlist.assoc(tweettime_now)
       if tweet then
         begin
-          create_tweet(create_tweet_url, oauth_params, tweet[1])
+          logging(create_tweet(create_tweet_url, oauth_params, tweet[1]))
           logging('Execute: Twitter.update')
         rescue
           logging('Error: Twitter.update')
