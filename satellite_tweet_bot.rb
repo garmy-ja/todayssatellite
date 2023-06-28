@@ -44,7 +44,22 @@ end
 # Tweet post
 create_tweet_url = "https://api.twitter.com/2/tweets"
 
-def create_tweet(url, oauth_params, text)
+def create_tweet(url, consumer_key, consumer_secret, access_token, access_token_secret, text)
+
+    # OAuth Consumerオブジェクトを作成
+    consumer = OAuth::Consumer.new(consumer_key, consumer_secret,
+        :site => 'https://api.twitter.com',
+        :debug_output => false)
+
+    # OAuth Access Tokenオブジェクトを作成
+    access_token = OAuth::AccessToken.new(consumer, access_token, access_token_secret)
+
+    # OAuthパラメータをまとめたハッシュを作成
+    oauth_params = {
+        :consumer => consumer,
+        :token => access_token,
+    }
+
     json_payload = {"text": text}
 	options = {
 	    :method => :post,
@@ -68,25 +83,10 @@ logging('Start: satellite_bot_tweet.rb started.')
 
 # Twitter configuration
 logging("Opening token files : .env")
-conf = open(File.expand_path('../token.conf',__FILE__),'r')
 consumer_key = ENV["CONSUMER_KEY"]
 consumer_secret = ENV["CONSUMER_SECRET"]
 access_token = ENV["ACCESS_TOKEN"]
 access_token_secret = ENV["ACCESS_TOKEN_SECRET"]
-
-# OAuth Consumerオブジェクトを作成
-consumer = OAuth::Consumer.new(consumer_key, consumer_secret,
-	:site => 'https://api.twitter.com',
-	:debug_output => false)
-
-# OAuth Access Tokenオブジェクトを作成
-access_token = OAuth::AccessToken.new(consumer, access_token, access_token_secret)
-
-# OAuthパラメータをまとめたハッシュを作成
-oauth_params = {
-:consumer => consumer,
-:token => access_token,
-}
 
 # Slack configuration
 slackurl = ENV["SLACK_WEBHOOK"]
@@ -120,13 +120,13 @@ begin
     loopcount = 0
     begin
       # make time vars
-      tweettime_now = Time.now.strftime('%m/%d %H:%M:%S')
+      tweettime_now = (Time.now + 0).strftime('%m/%d %H:%M:%S')
       tweettime_nex = (Time.now + (60*60*24)).strftime('%m/%d %H:%M:%S')
       # tweet
       tweet = tweetlist.assoc(tweettime_now)
       if tweet then
         begin
-          logging(create_tweet(create_tweet_url, oauth_params, tweet[1]))
+          logging(create_tweet(create_tweet_url, consumer_key, consumer_secret, access_token, access_token_secret, tweet[1]))
           logging('Execute: Twitter.update')
         rescue
           logging('Error: Twitter.update')
