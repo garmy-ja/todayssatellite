@@ -141,12 +141,12 @@ def post_bluesky( tweettext )
     if facetslist.size > 0 then
         feedpost[:facets] = make_facets( facetslist )
         feedpost[:embed] = {
-            "$type": "app.bsky.embed.external",
-            "external": {
-                "uri": facetslist[0][0],
-                "title": html_get_title(facetslist[0][0]),
-                "description": ""
-            }
+            "$type": "app.bsky.embed.external" #,
+#            "external": {
+#                "uri": facetslist[0][0],
+#                "title": html_get_title(facetslist[0][0]),
+#                "description": ""
+#            }
         }
     end
 
