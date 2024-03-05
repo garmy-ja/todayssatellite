@@ -101,7 +101,7 @@ def get_url_positions( fulltext )
           fulltext.byteindex(URI::DEFAULT_PARSER.make_regexp,start_pos)+fulltext.match(URI::DEFAULT_PARSER.make_regexp,start_pos).to_s.length
           ]
         ]
-      start_pos = fulltext.index(URI::DEFAULT_PARSER.make_regexp,start_pos)+fulltext.match(URI::DEFAULT_PARSER.make_regexp,start_pos).to_s.length
+      start_pos = fulltext.byteindex(URI::DEFAULT_PARSER.make_regexp,start_pos)+fulltext.match(URI::DEFAULT_PARSER.make_regexp,start_pos).to_s.length
     }
 
     return pos_list
@@ -140,14 +140,14 @@ def post_bluesky( tweettext )
 
     if facetslist.size > 0 then
         feedpost[:facets] = make_facets( facetslist )
-        feedpost[:embed] = {
-            "$type": "app.bsky.embed.external" #,
+#        feedpost[:embed] = {
+#            "$type": "app.bsky.embed.external" #,
 #            "external": {
 #                "uri": facetslist[0][0],
 #                "title": html_get_title(facetslist[0][0]),
 #                "description": ""
 #            }
-        }
+#        }
     end
 
     return atproto_postfeed( did, feedpost, accessJwt )
