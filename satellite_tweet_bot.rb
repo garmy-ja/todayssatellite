@@ -91,6 +91,8 @@ access_token_secret = ENV["ACCESS_TOKEN_SECRET"]
 
 # Slack configuration
 slackurl = ENV["SLACK_WEBHOOK"]
+# Mattermost configuration
+mattermosturl = ENV["MATTERMOST_WEBHOOK"]
 
 # load tweetlist
 fs = File::Stat.new(File.expand_path('../tweetlist.xlsx',__FILE__))
@@ -150,6 +152,7 @@ begin
             ]
           }.to_json
           slackpost( slackurl, prepayload )
+          slackpost( mattermosturl, prepayload )
           logging('Execute: Slack.update')
         rescue => e
           logging('Error: Slack.update ' + e.message)
