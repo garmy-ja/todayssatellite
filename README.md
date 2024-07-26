@@ -1,8 +1,8 @@
 # todayssatellite
 
 Twitter bot program for https://twitter.com/todayssatellite & https://activitypub.garmy.jp/@todayssatellite
-今日の人工衛星アカウントに定時にTweetをするためのbot
-Mastodonへの投稿も復活していますがAPIを直接叩いています。
+ & https://bsky.app/profile/todayssatellite.bsky.social
+今日の人工衛星アカウントに定時に投稿をするためのbot
 
 アカウントのフォロー状況を定期的に取得するスクリプトfollowers_rr.rbも同梱、そちらの利用方法は当該ファイルを確認のこと。
 
