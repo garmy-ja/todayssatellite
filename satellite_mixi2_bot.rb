@@ -22,7 +22,7 @@ CREATE_POST_RPC = "#{API_BASE_URL}/social.mixi.application.service.application.v
 # ログ出力
 # -------------------------------------------------------------------
 def logging(log_str)
-  file = open(File.expand_path('../_log_mix2', __FILE__), 'a')
+  file = open(File.expand_path('../_log_mixi2', __FILE__), 'a')
   STDOUT.sync = true
   [file, STDOUT].each { |io| io.print Time.now.to_s, "\t", log_str, "\n" }
   STDOUT.sync = false
