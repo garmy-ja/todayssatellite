@@ -7,6 +7,8 @@ require 'roo'
 require 'net/http'
 require 'uri'
 require 'json'
+require 'httpx'
+require 'google/protobuf'
 require 'dotenv/load'
 
 # -------------------------------------------------------------------
@@ -16,7 +18,7 @@ require 'dotenv/load'
 # -------------------------------------------------------------------
 TOKEN_URL      = 'https://application-auth.mixi.social/oauth2/token'.freeze
 API_BASE_URL   = 'https://application-api.mixi.social'.freeze
-CREATE_POST_RPC = "#{API_BASE_URL}/social.mixi.application.service.application.v1.ApplicationService/CreatePost".freeze
+CREATE_POST_RPC = "#{API_BASE_URL}/social.mixi.application.service.application_api.v1.ApplicationService/CreatePost".freeze
 
 # -------------------------------------------------------------------
 # ログ出力
@@ -76,27 +78,86 @@ class Mixi2Authenticator
 end
 
 # -------------------------------------------------------------------
-# mixi2 へのポスト投稿
-# Connect プロトコルは Content-Type: application/json で
-# HTTPS POST するだけで呼び出せる（gRPC-Web 互換）。
+# Protobuf メッセージ定義（protoc / .proto ファイル不要）
+# google-protobuf gem の Ruby DSL でインライン定義する。
+# CreatePostRequest: field 1 = text (string)
 # -------------------------------------------------------------------
-def create_post(auth, text)
-  uri  = URI.parse(CREATE_POST_RPC)
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = true
-
-  req = Net::HTTP::Post.new(uri.request_uri)
-  req['Content-Type']  = 'application/json'
-  req['Authorization'] = "Bearer #{auth.access_token}"
-  req.body = JSON.dump({ text: text })
-
-  res = http.request(req)
-  unless res.is_a?(Net::HTTPSuccess)
-    raise "CreatePost failed (#{res.code}): #{res.body}"
+Google::Protobuf::DescriptorPool.generated_pool.build do
+  add_message 'social.mixi.application.service.application_api.v1.CreatePostRequest' do
+    optional :text, :string, 1
   end
-
-  JSON.parse(res.body)
 end
+ 
+CreatePostRequest = Google::Protobuf::DescriptorPool.generated_pool
+  .lookup('social.mixi.application.service.application_api.v1.CreatePostRequest')
+  .msgclass
+
+# -------------------------------------------------------------------
+# mixi2 へのポスト投稿
+#
+# レスポンスヘッダーの調査により、サーバーは Connect プロトコルではなく
+# 素の gRPC プロトコルで動作していることが判明した:
+#   content-type: application/grpc
+#   grpc-message: invalid gRPC request content-type "application/proto"
+#
+# gRPC unary リクエストのフォーマット:
+#   Content-Type: application/grpc+proto
+#   ボディ: [圧縮フラグ 1byte (0x00)] [メッセージ長 4byte big-endian] [Protobuf バイナリ]
+#
+# gRPC レスポンスのステータスはレスポンスボディではなく
+# トレーラーヘッダー (grpc-status / grpc-message) で返される。
+# httpx はトレーラーを response.headers に統合して返す。
+#
+# net/http は Ruby 3.3 時点で HTTP/2 非対応のため、
+# ALPN ネゴシエーションで HTTP/2 を自動選択する httpx gem を使用する。
+#
+# デバッグのため、送受信の詳細を毎回ログに出力する。
+# -------------------------------------------------------------------
+ 
+# gRPC の Length-Prefixed Message フレームを組み立てる。
+# 圧縮なし (compression flag = 0x00) の 5 バイトヘッダーを Protobuf バイナリの先頭に付加する。
+def grpc_encode(proto_bytes)
+  [0x00, proto_bytes.bytesize].pack('CN') + proto_bytes
+end
+ 
+def create_post(auth, text)
+  token      = auth.access_token
+  proto_body = CreatePostRequest.encode(CreatePostRequest.new(text: text))
+  req_body   = grpc_encode(proto_body)
+ 
+  req_headers = {
+    'Content-Type'  => 'application/grpc+proto',
+    'Authorization' => "Bearer #{token}",
+    'Te'            => 'trailers'   # gRPC はトレーラーを必要とする
+  }
+ 
+  logging("Debug: POST #{CREATE_POST_RPC}")
+  logging("Debug: headers Content-Type=#{req_headers['Content-Type']} " \
+          "Authorization=Bearer ...#{token[-8..]}")
+  logging("Debug: proto hex=#{proto_body.unpack1('H*')} (#{proto_body.bytesize} bytes) " \
+          "framed=#{req_body.unpack1('H*')} (#{req_body.bytesize} bytes)")
+ 
+  response = HTTPX.post(
+    CREATE_POST_RPC,
+    headers: req_headers,
+    body:    req_body
+  )
+ 
+  # レスポンスヘッダー（トレーラー含む）をログに出力する
+  res_headers_str = response.headers.to_h.map { |k, v| "#{k}=#{v}" }.join(' ')
+  logging("Debug: response status=#{response.status} headers=#{res_headers_str}")
+ 
+  # gRPC のエラーはトレーラーヘッダー grpc-status で返される。
+  # grpc-status=0 が成功、それ以外はエラー。
+  grpc_status  = response.headers['grpc-status'].to_i
+  grpc_message = response.headers['grpc-message'] || ''
+  unless grpc_status == 0
+    raise "CreatePost failed (HTTP #{response.status} / gRPC status #{grpc_status}): #{grpc_message}"
+  end
+ 
+  response.body.to_s
+end
+
 
 # -------------------------------------------------------------------
 # メイン処理
