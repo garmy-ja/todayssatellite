@@ -14,8 +14,8 @@ require 'dotenv/load'
 # Connect プロトコル（gRPC-Web 互換 / HTTPS）を使用するため、
 # gRPC バイナリストリーム接続は不要。CreatePost を HTTPS POST で呼ぶ。
 # -------------------------------------------------------------------
-TOKEN_URL      = 'https://auth.mixi.social/oauth2/token'.freeze
-API_BASE_URL   = 'https://mixi.social'.freeze
+TOKEN_URL      = 'https://application-auth.mixi.social/oauth2/token'.freeze
+API_BASE_URL   = 'https://application-api.mixi.social'.freeze
 CREATE_POST_RPC = "#{API_BASE_URL}/social.mixi.application.service.application.v1.ApplicationService/CreatePost".freeze
 
 # -------------------------------------------------------------------
