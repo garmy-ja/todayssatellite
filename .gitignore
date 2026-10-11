@@ -9,3 +9,4 @@ _log_toots
 _log_posts
 .env
 *.pid
+vendor

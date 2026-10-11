@@ -1,0 +1,13 @@
+source 'https://rubygems.org'
+ruby '~> 3.2'
+
+gem 'daemons', '~> 1.4'
+gem 'roo', '~> 2.10'
+gem 'dotenv', '~> 3.1'
+gem 'oauth', '~> 1.1'
+gem 'typhoeus', '~> 1.4'
+gem 'httpx', '~> 1.7'
+gem 'google-protobuf', '~> 3.25'
+gem 'mastodon-api', '~> 2.0', require: 'mastodon'
+gem 'highline', '~> 3.0'
+gem 'oauth2', '~> 2.0'
