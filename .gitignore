@@ -7,6 +7,7 @@ followers_log
 _log_followers
 _log_toots
 _log_posts
+_log_mixi2
 .env
 *.pid
 vendor
