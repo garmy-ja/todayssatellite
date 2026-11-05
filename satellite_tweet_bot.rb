@@ -10,11 +10,11 @@ require 'json'
 require 'oauth'
 require 'typhoeus'
 require 'oauth/request_proxy/typhoeus_request'
-require 'dotenv'
+require 'dotenv/load'
 
 # The bot scripts live one directory below the repository's data/config files.
 # Keep the same ../ layout used by the original script.
-APP_ROOT = File.expand_path('..', __dir__)
+APP_ROOT = File.expand_path('.', __dir__)
 LOG_FILE = File.join(APP_ROOT, '_log_tweets')
 ENV_FILE = File.join(APP_ROOT, '.env')
 TWEETLIST_FILE = File.join(APP_ROOT, 'tweetlist.xlsx')
@@ -208,7 +208,7 @@ def load_configuration
   }
 end
 
-def run_bot
+begin
   logging('Start: satellite_tweet_bot.rb started.')
   logging("Configuration file: #{File.file?(ENV_FILE) ? ENV_FILE : 'not found (using process environment)'}")
   logging("X API endpoint: #{X_CREATE_POST_URL}")
@@ -294,17 +294,8 @@ def run_bot
       loopcount += 1
     end until loopcount >= 60
   end
+
+ensure
+  logging('Stop: satellite_tweet_bot.rb exiting.')
 end
 
-if $PROGRAM_NAME == __FILE__
-  begin
-    run_bot
-  rescue Interrupt
-    logging('Stop: interrupted by signal.')
-  rescue StandardError => e
-    log_exception('Fatal: satellite_tweet_bot.rb stopped', e)
-    exit 1
-  ensure
-    logging('Stop: satellite_tweet_bot.rb exiting.')
-  end
-end
